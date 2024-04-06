@@ -4,14 +4,23 @@ use std::{env, fs::File, io::Write};
 
 #[tokio::main]
 async fn main() -> octocrab::Result<()> {
-    // Token
-    let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env variable is required");
-
     // Args
     let args: Vec<String> = env::args().collect();
     let start = NaiveDate::parse_from_str(&args[1], "%Y-%m-%d").expect("Failed to parse date");
     let end = NaiveDate::parse_from_str(&args[2], "%Y-%m-%d").expect("Failed to parse date");
     println!("Args {} - {}", start, end);
+
+    let engine_updates = engine_updates(start, end).await?;
+
+    let mut file = File::create("updates.md").expect("Failed to create file");
+    file.write_all(engine_updates.as_bytes())
+        .expect("Failed to write to file");
+
+    Ok(())
+}
+
+async fn engine_updates(start: NaiveDate, end: NaiveDate) -> octocrab::Result<String> {
+    let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env variable is required");
 
     let octocrab = Octocrab::builder().personal_token(token).build()?;
 
@@ -93,9 +102,5 @@ async fn main() -> octocrab::Result<()> {
         }
     }
 
-    let mut file = File::create("updates.md").expect("Failed to create file");
-    file.write_all(markdown.as_bytes())
-        .expect("Failed to write to file");
-
-    Ok(())
+    Ok(markdown)
 }
