@@ -50,6 +50,8 @@ async fn main() -> octocrab::Result<()> {
         "Maix0/pixel_engine",
     ];
 
+    let mut markdown = String::from("# Engine Updates\n\n");
+
     for engine in engines {
         let (owner, repo) = engine.split_once('/').unwrap();
 
@@ -64,20 +66,33 @@ async fn main() -> octocrab::Result<()> {
             .items;
 
         for release in releases {
+            let is_new = {
+                let is_after_start = release.published_at.unwrap().naive_utc().date() >= start;
+                let is_before_end = release.published_at.unwrap().naive_utc().date() <= end;
+
+                is_after_start && is_before_end
+            };
+
             println!(
                 "Found release: {status} {tag_name} {published_at}",
                 published_at = release.published_at.unwrap(),
                 tag_name = release.tag_name,
-                status = if release.published_at.unwrap().naive_utc().date() >= start
-                    && release.published_at.unwrap().naive_utc().date() <= end
-                {
-                    "✅"
-                } else {
-                    "❌"
-                }
+                status = if is_new { "✅" } else { "❌" }
             );
+
+            if is_new {
+                markdown.push_str(&format!(
+                    "## {repo} {name}\n\n {text}",
+                    repo = repo,
+                    name = release.name.unwrap_or_default(),
+                    text = release.body.unwrap_or_default(),
+                ));
+            }
         }
     }
+
+    println!("Markdown");
+    println!("{}", markdown);
 
     Ok(())
 }
