@@ -1,6 +1,6 @@
 use chrono::NaiveDate;
 use octocrab::Octocrab;
-use std::env;
+use std::{env, fs::File, io::Write};
 
 #[tokio::main]
 async fn main() -> octocrab::Result<()> {
@@ -80,19 +80,22 @@ async fn main() -> octocrab::Result<()> {
                 status = if is_new { "✅" } else { "❌" }
             );
 
-            if is_new {
+            let text = release.body.unwrap_or_default().replace("# ", "### ");
+
+            if is_new && !text.is_empty() {
                 markdown.push_str(&format!(
-                    "## {repo} {name}\n\n {text}",
+                    "## {repo} {name}\n\n {text}\n\n",
                     repo = repo,
                     name = release.name.unwrap_or_default(),
-                    text = release.body.unwrap_or_default(),
+                    text = text,
                 ));
             }
         }
     }
 
-    println!("Markdown");
-    println!("{}", markdown);
+    let mut file = File::create("updates.md").expect("Failed to create file");
+    file.write_all(markdown.as_bytes())
+        .expect("Failed to write to file");
 
     Ok(())
 }
