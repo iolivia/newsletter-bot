@@ -4,17 +4,18 @@ use octocrab::Octocrab;
 async fn main() -> octocrab::Result<()> {
     let octocrab = Octocrab::builder().build()?;
 
-    let commit = octocrab
-        .commits("XAMPPRocky", "octocrab")
-        .get("15c0e31")
-        .await?;
+    let releases = octocrab
+        .repos("rust-lang", "rust")
+        .releases()
+        .list()
+        .send()
+        .await?
+        .items;
 
-    for file in commit.files.unwrap() {
+    for release in releases {
         println!(
-            "File: {file}, Additions: {additions}, Deletions: {deletions}",
-            file = file.filename,
-            additions = file.additions,
-            deletions = file.deletions,
+            "Release: {body}", //
+            body = release.body.unwrap_or_default(),
         );
     }
 
