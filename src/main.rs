@@ -20,8 +20,8 @@ async fn main() {
     let discussions = discussions(start, end).await.expect("start");
 
     let updates = format!(
-        "{}\n\n{}\n\n{}",
-        engine_updates, library_updates, rfc_updates
+        "{}\n\n{}\n\n{}\n\n{}",
+        engine_updates, library_updates, rfc_updates, discussions
     );
 
     let mut file = File::create("updates.md").expect("Failed to create file");
@@ -333,13 +333,25 @@ async fn discussions(start: NaiveDate, end: NaiveDate) -> Result<String, RouxErr
     let subreddit = Subreddit::new("rust_gamedev");
     let options = FeedOption::new().period(TimePeriod::ThisYear);
 
-    let top_posts = subreddit
+    let mut top_posts = subreddit
         .top(100, Some(options.clone()))
         .await?
         .data
         .children;
 
-    for post in top_posts {
+    let mut hot_posts = subreddit
+        .hot(100, Some(options)) //
+        .await?
+        .data
+        .children;
+
+    let mut posts = Vec::new();
+    posts.append(&mut top_posts);
+    posts.append(&mut hot_posts);
+
+    let mut markdown = String::from("# Discussions\n\n");
+
+    for post in posts {
         let post_date = Utc
             .timestamp_opt(post.data.created_utc as i64, 0)
             .unwrap()
@@ -347,21 +359,14 @@ async fn discussions(start: NaiveDate, end: NaiveDate) -> Result<String, RouxErr
 
         if post_date >= start && post_date <= end {
             println!("Found top post: {}", post.data.title);
+
+            markdown.push_str(&format!(
+                "* [{title}]({url})\n\n",
+                title = post.data.title,
+                url = post.data.url.unwrap_or_default()
+            ));
         }
     }
 
-    let hot_posts = subreddit.hot(100, Some(options)).await?.data.children;
-
-    for post in hot_posts {
-        let post_date = Utc
-            .timestamp_opt(post.data.created_utc as i64, 0)
-            .unwrap()
-            .date_naive();
-
-        if post_date >= start && post_date <= end {
-            println!("Found hot post: {}", post.data.title);
-        }
-    }
-
-    Ok(String::new())
+    Ok(markdown)
 }

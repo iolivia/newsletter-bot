@@ -1144,3 +1144,57 @@ Full changelog is available below. Thanks for all the contributors, and for all 
 
 * [Maintenance] Fix broken skinning test
 * [Maintenance] Standardise naming of binaries in examples
+
+
+# Discussions
+
+* [Just finished rendering my first ever sphere WGPU and I’m so proud 🥲](https://i.redd.it/p06vdjozxy1c1.jpg)
+
+* [Making a Top-down game inspired by RimWorld, Valheim, and The Majesty](https://v.redd.it/6dxey4dr9azb1)
+
+* [Realtime Ray Marching implemented with Rust and wgpu](https://v.redd.it/y7g9rrlyoo4c1)
+
+* [Simulating 100,000 pedestrians with a multi-threaded Rust-core simulation library (TerraCrowds) and Unity WebGL in a web browser](https://v.redd.it/j8271fsisu9c1)
+
+* [A kids game with no ads made with Rust + Bevy](https://www.reddit.com/r/rust_gamedev/comments/1ap02w0/a_kids_game_with_no_ads_made_with_rust_bevy/)
+
+* [Running 30 000 animated characters with Unity WebGL + WebAssembly with our Rust-based TerraCrowds engine running at 60Hz and 4K resolution in the browser.](https://v.redd.it/xidmk6jsmc1c1)
+
+* [Implemented experimental online multiplayer (devlog in comments)](https://v.redd.it/reox4l1qdimc1)
+
+* [Two months later, and I've created a devlog for my game](https://i.redd.it/tx8v2whvkzwb1.png)
+
+* [Ray tracing and Ray marching implemented entirely in Rust.](https://i.redd.it/gc8nwxdgd32c1.jpeg)
+
+* [Is the borrow checker poison for game dev?](https://www.reddit.com/r/rust_gamedev/comments/192ny85/is_the_borrow_checker_poison_for_game_dev/)
+
+* [Rust Gamedev Meetup 33](https://gamedev.rs/blog/rust-gamedev-meetup-33/)
+
+* [Veloren 0.16 release](https://veloren.net/blog/release-0-16/)
+
+* [A Sokoban powered by bevy](https://www.reddit.com/r/rust_gamedev/comments/1bov9bh/a_sokoban_powered_by_bevy/)
+
+* [Voltum - Merge game made with Rust + Bevy](https://www.reddit.com/r/rust_gamedev/comments/1bozo5s/voltum_merge_game_made_with_rust_bevy/)
+
+* [Geometry Batching, a Better Approach?](https://www.reddit.com/r/rust_gamedev/comments/1boewf2/geometry_batching_a_better_approach/)
+
+* [Combine And Conquer 0.8.0 is now available [multi-planetary automation game]](https://buckmartin.de/combine-and-conquer/2024-03-23-v0.8.0.html)
+
+* [Just started on a particle system(in Rust), I think it looks cool.](https://v.redd.it/w4ljsboszypc1)
+
+* [GPU Particle Research — Bevy Hanabi, Part 2](https://medium.com/@Sou1gh0st/gpu-particle-research-bevy-hanabi-part-2-1354fc021f38)
+
+* [[Media] Fyrox now supports hot reloading - you can write your game while it is running and almost immediately see the results. This is super useful for rapid prototyping and now Rust is as fast for game development as scripting languages.](https://www.youtube.com/watch?v=vq6P3Npydmw)
+
+* [Bowfishing Blitz: A Game of Refractive Aberration (my first jam game made using Rust and wgpu)](https://itch.io/jam/acerola-jam-0/rate/2579027)
+
+* [Added a slight effect to the edges of player vision. Good or Bad?](https://www.youtube.com/watch?v=csKK7U-tcsg)
+
+* [Attention Game Devs! Unleash Your Creativity in the EPIC 72 Hour Game Jam by .fun Domains! (This Weekend) 🎮🏆🚀](https://www.reddit.com/r/rust_gamedev/comments/1bifhlk/attention_game_devs_unleash_your_creativity_in/)
+
+* [Strategy to implement units in a RTS game in Rust?](https://www.reddit.com/r/rust_gamedev/comments/1bhkwub/strategy_to_implement_units_in_a_rts_game_in_rust/)
+
+* [Publishing a Game](https://www.reddit.com/r/rust_gamedev/comments/1bgazh2/publishing_a_game/)
+
+* [GPU Particle Research — Bevy Hanabi, Part 1](https://twitter.com/Sou1gh0st/status/1769027238610325518)
+
