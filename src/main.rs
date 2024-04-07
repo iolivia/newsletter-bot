@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use octocrab::Octocrab;
+use octocrab::{models::IssueState, Octocrab};
 use std::{env, fs::File, io::Write};
 
 #[tokio::main]
@@ -184,44 +184,60 @@ async fn rfc_updates() -> octocrab::Result<String> {
             "crash",
         ];
 
+        let relevant_labels = labels
+            .iter()
+            .filter(|label| {
+                let has_keyword_in_name = keywords
+                    .iter()
+                    .any(|keyword| label.name.to_lowercase().contains(keyword));
+
+                let has_keyword_in_description = keywords.iter().any(|keyword| {
+                    label
+                        .description
+                        .clone()
+                        .map(|x| x.contains(keyword))
+                        .unwrap_or_default()
+                });
+
+                let has_negative_keyword_in_name = negative_keywords
+                    .iter()
+                    .any(|keyword| label.name.to_lowercase().contains(keyword));
+
+                let has_negative_keyword_in_description = negative_keywords.iter().any(|keyword| {
+                    label
+                        .description
+                        .clone()
+                        .map(|x| x.contains(keyword))
+                        .unwrap_or_default()
+                });
+
+                (has_keyword_in_name || has_keyword_in_description)
+                    && !has_negative_keyword_in_name
+                    && !has_negative_keyword_in_description
+            })
+            .map(|label| label.name.clone())
+            .collect::<Vec<_>>();
+
+        let issues = octocrab
+            .issues(owner, repo)
+            .list()
+            .labels(&relevant_labels)
+            .per_page(100)
+            .send()
+            .await?
+            .items;
+
+        let open_issues = issues
+            .iter()
+            .filter(|issue| issue.state == IssueState::Open)
+            .count();
+
         println!(
-            "{}/{} - {:?}",
+            "{}/{} - {:?} Beginner Open Issues - {}",
             owner,
             repo,
-            labels
-                .iter()
-                .filter(|label| {
-                    let has_keyword_in_name = keywords
-                        .iter()
-                        .any(|keyword| label.name.to_lowercase().contains(keyword));
-
-                    let has_keyword_in_description = keywords.iter().any(|keyword| {
-                        label
-                            .description
-                            .clone()
-                            .map(|x| x.contains(keyword))
-                            .unwrap_or_default()
-                    });
-
-                    let has_negative_keyword_in_name = negative_keywords
-                        .iter()
-                        .any(|keyword| label.name.to_lowercase().contains(keyword));
-
-                    let has_negative_keyword_in_description =
-                        negative_keywords.iter().any(|keyword| {
-                            label
-                                .description
-                                .clone()
-                                .map(|x| x.contains(keyword))
-                                .unwrap_or_default()
-                        });
-
-                    (has_keyword_in_name || has_keyword_in_description)
-                        && !has_negative_keyword_in_name
-                        && !has_negative_keyword_in_description
-                })
-                .map(|label| label.name.clone())
-                .collect::<Vec<_>>()
+            open_issues,
+            if open_issues == 0 { "❌" } else { "✅" }
         );
     }
 
