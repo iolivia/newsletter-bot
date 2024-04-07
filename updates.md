@@ -248,3 +248,27 @@ This release is only meant for functional testing and cannot be used for product
  An early test for releases on the new codebase.
 
 
+
+
+# Requests for Contribution
+
+## rust-sdl2 - 1 Beginner Open Issues
+
+* Support "bundled" feature with "gfx", "image", "mixer" and "ttf" features
+## bevy - 100 Beginner Open Issues
+
+* Improve documentation and example around enabling audio formats in Cargo.toml
+* Revert "Support calculating normals for indexed meshes"
+* Make an example for bevy_ui gizmos layout overlay
+* Split apart and reorganize gizmo examples
+* Add examples demonstrating how to follow the player with a camera
+## macroquad - 1 Beginner Open Issues
+
+* is_key_down(KeyCode::LeftShift) reports as false for any modifier keys on macos
+## rust-sfml - 1 Beginner Open Issues
+
+* Better documentation and support for finding native libs on windows
+## hotham - 2 Beginner Open Issues
+
+* [Maintenance] Fix broken skinning test
+* [Maintenance] Standardise naming of binaries in examples

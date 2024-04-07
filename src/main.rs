@@ -13,8 +13,10 @@ async fn main() -> octocrab::Result<()> {
     let engine_updates = engine_updates(start, end).await?;
     let rfc_updates = rfc_updates().await?;
 
+    let updates = format!("{}\n\n{}", engine_updates, rfc_updates);
+
     let mut file = File::create("updates.md").expect("Failed to create file");
-    file.write_all(engine_updates.as_bytes())
+    file.write_all(updates.as_bytes())
         .expect("Failed to write to file");
 
     Ok(())
@@ -163,6 +165,8 @@ async fn rfc_updates() -> octocrab::Result<String> {
         // "https://github.com/AmbientRun/Ambient/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22",
     ];
 
+    let mut markdown = String::from("# Requests for Contribution\n\n");
+
     for project in projects {
         let (owner, repo) = project.split_once('/').unwrap();
 
@@ -230,16 +234,28 @@ async fn rfc_updates() -> octocrab::Result<String> {
         let open_issues = issues
             .iter()
             .filter(|issue| issue.state == IssueState::Open)
-            .count();
+            .collect::<Vec<_>>();
 
         println!(
             "{}/{} - {:?} Beginner Open Issues - {}",
             owner,
             repo,
-            open_issues,
-            if open_issues == 0 { "❌" } else { "✅" }
+            open_issues.len(),
+            if open_issues.is_empty() { "❌" } else { "✅" }
         );
+
+        if !open_issues.is_empty() {
+            markdown.push_str(&format!(
+                "## {} - {} Beginner Open Issues\n\n",
+                repo,
+                open_issues.len()
+            ));
+
+            for open_issue in open_issues.iter().take(5) {
+                markdown.push_str(&format!("* {name}\n", name = open_issue.title));
+            }
+        }
     }
 
-    Ok(String::new())
+    Ok(markdown)
 }
