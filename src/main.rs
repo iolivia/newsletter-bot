@@ -1,18 +1,23 @@
-use chrono::NaiveDate;
+use chrono::{NaiveDate, TimeZone, Utc};
 use octocrab::{models::IssueState, Octocrab};
+use roux::{
+    util::{FeedOption, RouxError, TimePeriod},
+    Subreddit,
+};
 use std::{env, fs::File, io::Write};
 
 #[tokio::main]
-async fn main() -> octocrab::Result<()> {
+async fn main() {
     // Args
     let args: Vec<String> = env::args().collect();
     let start = NaiveDate::parse_from_str(&args[1], "%Y-%m-%d").expect("Failed to parse date");
     let end = NaiveDate::parse_from_str(&args[2], "%Y-%m-%d").expect("Failed to parse date");
     println!("Args {} - {}", start, end);
 
-    let engine_updates = engine_updates(start, end).await?;
-    let library_updates = library_updates(start, end).await?;
-    let rfc_updates = rfc_updates().await?;
+    let engine_updates = engine_updates(start, end).await.expect("engine_updates");
+    let library_updates = library_updates(start, end).await.expect("library_updates");
+    let rfc_updates = rfc_updates().await.expect("rfc_updates");
+    let discussions = discussions(start, end).await.expect("start");
 
     let updates = format!(
         "{}\n\n{}\n\n{}",
@@ -22,8 +27,6 @@ async fn main() -> octocrab::Result<()> {
     let mut file = File::create("updates.md").expect("Failed to create file");
     file.write_all(updates.as_bytes())
         .expect("Failed to write to file");
-
-    Ok(())
 }
 
 async fn engine_updates(start: NaiveDate, end: NaiveDate) -> octocrab::Result<String> {
@@ -324,4 +327,41 @@ async fn rfc_updates() -> octocrab::Result<String> {
     }
 
     Ok(markdown)
+}
+
+async fn discussions(start: NaiveDate, end: NaiveDate) -> Result<String, RouxError> {
+    let subreddit = Subreddit::new("rust_gamedev");
+    let options = FeedOption::new().period(TimePeriod::ThisYear);
+
+    let top_posts = subreddit
+        .top(100, Some(options.clone()))
+        .await?
+        .data
+        .children;
+
+    for post in top_posts {
+        let post_date = Utc
+            .timestamp_opt(post.data.created_utc as i64, 0)
+            .unwrap()
+            .date_naive();
+
+        if post_date >= start && post_date <= end {
+            println!("Found top post: {}", post.data.title);
+        }
+    }
+
+    let hot_posts = subreddit.hot(100, Some(options)).await?.data.children;
+
+    for post in hot_posts {
+        let post_date = Utc
+            .timestamp_opt(post.data.created_utc as i64, 0)
+            .unwrap()
+            .date_naive();
+
+        if post_date >= start && post_date <= end {
+            println!("Found hot post: {}", post.data.title);
+        }
+    }
+
+    Ok(String::new())
 }
