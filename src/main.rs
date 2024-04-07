@@ -11,6 +11,7 @@ async fn main() -> octocrab::Result<()> {
     println!("Args {} - {}", start, end);
 
     let engine_updates = engine_updates(start, end).await?;
+    let rfc_updates = rfc_updates().await?;
 
     let mut file = File::create("updates.md").expect("Failed to create file");
     file.write_all(engine_updates.as_bytes())
@@ -103,4 +104,126 @@ async fn engine_updates(start: NaiveDate, end: NaiveDate) -> octocrab::Result<St
     }
 
     Ok(markdown)
+}
+
+async fn rfc_updates() -> octocrab::Result<String> {
+    let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env variable is required");
+
+    let octocrab = Octocrab::builder().personal_token(token).build()?;
+
+    let projects = [
+        "Rust-SDL2/rust-sdl2",
+        "bevyengine/bevy",
+        "PistonDevelopers/piston",
+        "not-fl3/macroquad",
+        "ggez/ggez",
+        "nannou-org/nannou",
+        "jeremyletang/rust-sfml",
+        "amethyst/bracket-lib",
+        "17cupsofcoffee/tetra",
+        "godot-rust/gdnative",
+        "deltaphc/raylib-rs",
+        "PsichiX/oxygengine",
+        "VincentFoulon80/console_engine",
+        "AryanpurTech/BlueEngine",
+        "Nazariglez/notan",
+        "CleanCut/rusty_engine",
+        "geng-engine/geng",
+        "FyroxEngine/Fyrox",
+        "redpenguinyt/gemini-rust",
+        "attackgoat/screen-13",
+        "MalekiRe/stereokit-rs",
+        "jice-nospam/doryen-rs",
+        "polymonster/hotline",
+        "AmbientRun/Ambient",
+        "PistonDevelopers/turbine",
+        "markusmoenig/Eldiron",
+        "JustAPotota/defold-rs",
+        "leetvr/hotham",
+        "PikuseruConsole/pikuseru",
+        "gamercade-io/gamercade_console",
+        "jjant/runty8",
+        "Maix0/pixel_engine",
+        // "https://github.com/makspll/bevy_mod_scripting/labels/help%20wanted",
+        // "https://github.com/bevyengine/bevy/labels/D-Good-First-Issue",
+        // "https://github.com/ggez/ggez/labels/%2AGOOD%20FIRST%20ISSUE%2A",
+        // "https://github.com/FyroxEngine/Fyrox/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22",
+        // "https://github.com/rust-gamedev/arewegameyet#contribute",
+        // "https://graphite.rs/volunteer/guide/",
+        // "https://github.com/rust-windowing/winit/issues?q=is%3Aopen+is%3Aissue+label%3A%22difficulty%3A+easy%22",
+        // "https://github.com/HouraiTeahouse/backroll-rs/issues",
+        // "https://github.com/search?q=user%3AEmbarkStudios+state%3Aopen&type=issues",
+        // "https://github.com/gfx-rs/wgpu/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22",
+        // "https://github.com/hadronized/luminance-rs/issues?q=is%3Aissue+is%3Aopen+label%3A%22low+hanging+fruit%22",
+        // "https://gitlab.com/veloren/veloren/-/issues?label_name=beginner",
+        // "https://github.com/a-b-street/abstreet/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22",
+        // "https://github.com/mun-lang/mun/labels/good%20first%20issue",
+        // "https://github.com/mkhan45/SIMple-Mechanics/labels/good%20first%20issue",
+        // "https://github.com/bevyengine/bevy/labels/D-Good-First-Issue",
+        // "https://github.com/AmbientRun/Ambient/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22",
+    ];
+
+    for project in projects {
+        let (owner, repo) = project.split_once('/').unwrap();
+
+        let labels = octocrab
+            .issues(owner, repo)
+            .list_labels_for_repo()
+            .per_page(100)
+            .send()
+            .await?
+            .items;
+
+        let keywords = vec!["first", "good", "easy", "beginner", "help", "wanted"];
+        let negative_keywords = vec![
+            "challenging",
+            "complex",
+            "hard",
+            "difficult",
+            "performance",
+            "crash",
+        ];
+
+        println!(
+            "{}/{} - {:?}",
+            owner,
+            repo,
+            labels
+                .iter()
+                .filter(|label| {
+                    let has_keyword_in_name = keywords
+                        .iter()
+                        .any(|keyword| label.name.to_lowercase().contains(keyword));
+
+                    let has_keyword_in_description = keywords.iter().any(|keyword| {
+                        label
+                            .description
+                            .clone()
+                            .map(|x| x.contains(keyword))
+                            .unwrap_or_default()
+                    });
+
+                    let has_negative_keyword_in_name = negative_keywords
+                        .iter()
+                        .any(|keyword| label.name.to_lowercase().contains(keyword));
+
+                    let has_negative_keyword_in_description =
+                        negative_keywords.iter().any(|keyword| {
+                            label
+                                .description
+                                .clone()
+                                .map(|x| x.contains(keyword))
+                                .unwrap_or_default()
+                        });
+
+                    (has_keyword_in_name || has_keyword_in_description)
+                        && !has_negative_keyword_in_name
+                        && !has_negative_keyword_in_description
+                })
+                .map(|label| label.name.clone())
+                .collect::<Vec<_>>()
+        );
+    }
+
+    Ok(String::new())
 }
