@@ -11,9 +11,13 @@ async fn main() -> octocrab::Result<()> {
     println!("Args {} - {}", start, end);
 
     let engine_updates = engine_updates(start, end).await?;
+    let library_updates = library_updates(start, end).await?;
     let rfc_updates = rfc_updates().await?;
 
-    let updates = format!("{}\n\n{}", engine_updates, rfc_updates);
+    let updates = format!(
+        "{}\n\n{}\n\n{}",
+        engine_updates, library_updates, rfc_updates
+    );
 
     let mut file = File::create("updates.md").expect("Failed to create file");
     file.write_all(updates.as_bytes())
@@ -66,6 +70,68 @@ async fn engine_updates(start: NaiveDate, end: NaiveDate) -> octocrab::Result<St
 
     for engine in engines {
         let (owner, repo) = engine.split_once('/').unwrap();
+
+        println!("{}/{}", owner, repo);
+
+        let releases = octocrab
+            .repos(owner, repo)
+            .releases()
+            .list()
+            .send()
+            .await?
+            .items;
+
+        for release in releases {
+            let is_new = {
+                let is_after_start = release.published_at.unwrap().naive_utc().date() >= start;
+                let is_before_end = release.published_at.unwrap().naive_utc().date() <= end;
+
+                is_after_start && is_before_end
+            };
+
+            println!(
+                "Found release: {status} {tag_name} {published_at}",
+                published_at = release.published_at.unwrap(),
+                tag_name = release.tag_name,
+                status = if is_new { "✅" } else { "❌" }
+            );
+
+            let text = release.body.unwrap_or_default().replace("# ", "### ");
+
+            if is_new && !text.is_empty() {
+                markdown.push_str(&format!(
+                    "## {repo} {name}\n\n {text}\n\n",
+                    repo = repo,
+                    name = release.name.unwrap_or_default(),
+                    text = text,
+                ));
+            }
+        }
+    }
+
+    Ok(markdown)
+}
+
+async fn library_updates(start: NaiveDate, end: NaiveDate) -> octocrab::Result<String> {
+    let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env variable is required");
+
+    let octocrab = Octocrab::builder().personal_token(token).build()?;
+
+    let projects = vec![
+        "Jondolf/bevy_xpbd",
+        "LechintanTudor/sparsey",
+        "djeedai/bevy_hanabi",
+        "iced-rs/iced",
+        "loopystudios/bevy_vello",
+        "ManevilleF/hexx",
+        "nicopap/cuicui_layout",
+        "lucaspoffo/renet",
+    ];
+
+    let mut markdown = String::from("# Library Updates\n\n");
+
+    for project in projects {
+        let (owner, repo) = project.split_once('/').unwrap();
 
         println!("{}/{}", owner, repo);
 
