@@ -27,6 +27,15 @@
 - fixed panic on Windows when window is minimized
 
 
+## bevy_mod_scripting v0.6.0
+
+ #### What's Changed
+* Add lua documentation link to readme.md by @makspll in https://github.com/makspll/bevy_mod_scripting/pull/107
+* Proxy derive macros, rustc plugin codegen, safety improvements by @makspll in https://github.com/makspll/bevy_mod_scripting/pull/67
+
+
+**Full Changelog**: https://github.com/makspll/bevy_mod_scripting/compare/v0.5.0...v0.6.0
+
 
 
 # Requests for Contribution
@@ -51,6 +60,28 @@
 
 * [Maintenance] Fix broken skinning test
 * [Maintenance] Standardise naming of binaries in examples
+## iced - 2 Beginner Open Issues
+
+* Toast widget
+* Superfluous alignment functions
+## winit - 2 Beginner Open Issues
+
+* Windows: inner_size() reports 0x0 size when window is minimized
+* Minimum and Maximum size become incorrect when the HiDPI factor changes
+## wgpu - 6 Beginner Open Issues
+
+* Fix synchronization validation error in `water` example on Vulkan 
+* buffer_get_mapped_range different way of passing range than buffer_map_async
+* Test Buffer to Buffer and Buffer to/from Image Copies with Problematic Usages
+* Use WGSL instead of GLSL in library documentation 
+* WGPU_TRACE file from Firefox Nightly is missing final close-bracket
+## abstreet - 7 Beginner Open Issues
+
+* 15 minute neighborhoods
+* Populate lakes with boats
+* Represent people inside buildings better using procedural generation
+* Feature request: equity evaluation using census data
+* Render crowds of pedestrians better
 
 
 # Discussions

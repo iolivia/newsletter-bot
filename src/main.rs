@@ -11,6 +11,7 @@ enum RepositoryKind {
     Engine,
     Library,
     Game,
+    Rust,
 }
 
 /// Github repository
@@ -41,6 +42,10 @@ impl Repository {
         Self::new(owner, name, RepositoryKind::Game)
     }
 
+    fn rust(owner: &str, name: &str) -> Self {
+        Self::new(owner, name, RepositoryKind::Rust)
+    }
+
     fn is_engine(&self) -> bool {
         matches!(self.kind, RepositoryKind::Engine)
     }
@@ -51,6 +56,10 @@ impl Repository {
 
     fn is_game(&self) -> bool {
         matches!(self.kind, RepositoryKind::Game)
+    }
+
+    fn is_rust(&self) -> bool {
+        matches!(self.kind, RepositoryKind::Rust)
     }
 }
 
@@ -90,6 +99,7 @@ fn repositories() -> Vec<Repository> {
         Repository::engine("Maix0", "pixel_engine"),
     ];
 
+    // TODO add everything from https://github.com/EmbarkStudios/rust-ecosystem?tab=readme-ov-file#open-source
     let mut library_repositories = vec![
         Repository::library("Jondolf", "bevy_xpbd"),
         Repository::library("LechintanTudor", "sparsey"),
@@ -99,11 +109,29 @@ fn repositories() -> Vec<Repository> {
         Repository::library("ManevilleF", "hexx"),
         Repository::library("nicopap", "cuicui_layout"),
         Repository::library("lucaspoffo", "renet"),
+        Repository::library("makspll", "bevy_mod_scripting"),
+        Repository::library("rust-windowing", "winit"),
+        Repository::library("HouraiTeahouse", "backroll-rs"),
+        Repository::library("gfx-rs", "wgpu"),
+        Repository::library("hadronized", "luminance-rs"),
+        Repository::library("mun-lang", "mun"),
+    ];
+
+    let mut rust_repositories = vec![
+        Repository::rust("rust-gamedev", "arewegameyet"), //
+    ];
+
+    let mut game_repositories = vec![
+        Repository::game("veloren", "veloren"),
+        Repository::game("a-b-street", "abstreet"),
+        Repository::game("mkhan45", "SIMple-Mechanics"),
     ];
 
     let mut repositories = Vec::new();
     repositories.append(&mut engine_repositories);
     repositories.append(&mut library_repositories);
+    repositories.append(&mut rust_repositories);
+    repositories.append(&mut game_repositories);
 
     repositories
 }
@@ -126,7 +154,7 @@ async fn main() {
         .await
         .expect("library_updates");
 
-    let rfc_updates = rfc_updates().await.expect("rfc_updates");
+    let rfc_updates = rfc_updates(&repositories).await.expect("rfc_updates");
     let discussions = discussions(start, end).await.expect("start");
 
     let updates = format!(
@@ -245,70 +273,16 @@ async fn library_updates(
     Ok(markdown)
 }
 
-async fn rfc_updates() -> octocrab::Result<String> {
+async fn rfc_updates(repositories: &Vec<Repository>) -> octocrab::Result<String> {
     let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env variable is required");
 
     let octocrab = Octocrab::builder().personal_token(token).build()?;
 
-    let projects = [
-        "Rust-SDL2/rust-sdl2",
-        "bevyengine/bevy",
-        "PistonDevelopers/piston",
-        "not-fl3/macroquad",
-        "ggez/ggez",
-        "nannou-org/nannou",
-        "jeremyletang/rust-sfml",
-        "amethyst/bracket-lib",
-        "17cupsofcoffee/tetra",
-        "godot-rust/gdnative",
-        "deltaphc/raylib-rs",
-        "PsichiX/oxygengine",
-        "VincentFoulon80/console_engine",
-        "AryanpurTech/BlueEngine",
-        "Nazariglez/notan",
-        "CleanCut/rusty_engine",
-        "geng-engine/geng",
-        "FyroxEngine/Fyrox",
-        "redpenguinyt/gemini-rust",
-        "attackgoat/screen-13",
-        "MalekiRe/stereokit-rs",
-        "jice-nospam/doryen-rs",
-        "polymonster/hotline",
-        "AmbientRun/Ambient",
-        "PistonDevelopers/turbine",
-        "markusmoenig/Eldiron",
-        "JustAPotota/defold-rs",
-        "leetvr/hotham",
-        "PikuseruConsole/pikuseru",
-        "gamercade-io/gamercade_console",
-        "jjant/runty8",
-        "Maix0/pixel_engine",
-        // "https://github.com/makspll/bevy_mod_scripting/labels/help%20wanted",
-        // "https://github.com/bevyengine/bevy/labels/D-Good-First-Issue",
-        // "https://github.com/ggez/ggez/labels/%2AGOOD%20FIRST%20ISSUE%2A",
-        // "https://github.com/FyroxEngine/Fyrox/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22",
-        // "https://github.com/rust-gamedev/arewegameyet#contribute",
-        // "https://graphite.rs/volunteer/guide/",
-        // "https://github.com/rust-windowing/winit/issues?q=is%3Aopen+is%3Aissue+label%3A%22difficulty%3A+easy%22",
-        // "https://github.com/HouraiTeahouse/backroll-rs/issues",
-        // "https://github.com/search?q=user%3AEmbarkStudios+state%3Aopen&type=issues",
-        // "https://github.com/gfx-rs/wgpu/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22",
-        // "https://github.com/hadronized/luminance-rs/issues?q=is%3Aissue+is%3Aopen+label%3A%22low+hanging+fruit%22",
-        // "https://gitlab.com/veloren/veloren/-/issues?label_name=beginner",
-        // "https://github.com/a-b-street/abstreet/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22",
-        // "https://github.com/mun-lang/mun/labels/good%20first%20issue",
-        // "https://github.com/mkhan45/SIMple-Mechanics/labels/good%20first%20issue",
-        // "https://github.com/bevyengine/bevy/labels/D-Good-First-Issue",
-        // "https://github.com/AmbientRun/Ambient/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22",
-    ];
-
     let mut markdown = String::from("# Requests for Contribution\n\n");
 
-    for project in projects {
-        let (owner, repo) = project.split_once('/').unwrap();
-
+    for repository in repositories {
         let labels = octocrab
-            .issues(owner, repo)
+            .issues(&repository.owner, &repository.name)
             .list_labels_for_repo()
             .per_page(100)
             .send()
@@ -360,7 +334,7 @@ async fn rfc_updates() -> octocrab::Result<String> {
             .collect::<Vec<_>>();
 
         let issues = octocrab
-            .issues(owner, repo)
+            .issues(&repository.owner, &repository.name)
             .list()
             .labels(&relevant_labels)
             .per_page(100)
@@ -375,8 +349,8 @@ async fn rfc_updates() -> octocrab::Result<String> {
 
         println!(
             "{}/{} - {:?} Beginner Open Issues - {}",
-            owner,
-            repo,
+            repository.owner,
+            repository.name,
             open_issues.len(),
             if open_issues.is_empty() { "❌" } else { "✅" }
         );
@@ -384,7 +358,7 @@ async fn rfc_updates() -> octocrab::Result<String> {
         if !open_issues.is_empty() {
             markdown.push_str(&format!(
                 "## {} - {} Beginner Open Issues\n\n",
-                repo,
+                repository.name,
                 open_issues.len()
             ));
 
