@@ -6,6 +6,108 @@ use roux::{
 };
 use std::{env, fs::File, io::Write};
 
+/// Kind of repository
+enum RepositoryKind {
+    Engine,
+    Library,
+    Game,
+}
+
+/// Github repository
+struct Repository {
+    owner: String,
+    name: String,
+    kind: RepositoryKind,
+}
+
+impl Repository {
+    fn new(owner: &str, name: &str, kind: RepositoryKind) -> Self {
+        Self {
+            owner: owner.to_string(),
+            name: name.to_string(),
+            kind,
+        }
+    }
+
+    fn engine(owner: &str, name: &str) -> Self {
+        Self::new(owner, name, RepositoryKind::Engine)
+    }
+
+    fn library(owner: &str, name: &str) -> Self {
+        Self::new(owner, name, RepositoryKind::Library)
+    }
+
+    fn game(owner: &str, name: &str) -> Self {
+        Self::new(owner, name, RepositoryKind::Game)
+    }
+
+    fn is_engine(&self) -> bool {
+        matches!(self.kind, RepositoryKind::Engine)
+    }
+
+    fn is_library(&self) -> bool {
+        matches!(self.kind, RepositoryKind::Library)
+    }
+
+    fn is_game(&self) -> bool {
+        matches!(self.kind, RepositoryKind::Game)
+    }
+}
+
+fn repositories() -> Vec<Repository> {
+    let mut engine_repositories = vec![
+        Repository::engine("Rust-SDL2", "rust-sdl2"),
+        Repository::engine("bevyengine", "bevy"),
+        Repository::engine("PistonDevelopers", "piston"),
+        Repository::engine("not-fl3", "macroquad"),
+        Repository::engine("ggez", "ggez"),
+        Repository::engine("nannou-org", "nannou"),
+        Repository::engine("jeremyletang", "rust-sfml"),
+        Repository::engine("amethyst", "bracket-lib"),
+        Repository::engine("17cupsofcoffee", "tetra"),
+        Repository::engine("godot-rust", "gdnative"),
+        Repository::engine("deltaphc", "raylib-rs"),
+        Repository::engine("PsichiX", "oxygengine"),
+        Repository::engine("VincentFoulon80", "console_engine"),
+        Repository::engine("AryanpurTech", "BlueEngine"),
+        Repository::engine("Nazariglez", "notan"),
+        Repository::engine("CleanCut", "rusty_engine"),
+        Repository::engine("geng-engine", "geng"),
+        Repository::engine("FyroxEngine", "Fyrox"),
+        Repository::engine("redpenguinyt", "gemini-rust"),
+        Repository::engine("attackgoat", "screen-13"),
+        Repository::engine("MalekiRe", "stereokit-rs"),
+        Repository::engine("jice-nospam", "doryen-rs"),
+        Repository::engine("polymonster", "hotline"),
+        Repository::engine("AmbientRun", "Ambient"),
+        Repository::engine("PistonDevelopers", "turbine"),
+        Repository::engine("markusmoenig", "Eldiron"),
+        Repository::engine("JustAPotota", "defold-rs"),
+        Repository::engine("leetvr", "hotham"),
+        Repository::engine("PikuseruConsole", "pikuseru"),
+        Repository::engine("gamercade-io", "gamercade_console"),
+        Repository::engine("jjant", "runty8"),
+        Repository::engine("Maix0", "pixel_engine"),
+    ];
+
+    let mut library_repositories = vec![
+        Repository::library("Jondolf", "bevy_xpbd"),
+        Repository::library("LechintanTudor", "sparsey"),
+        Repository::library("djeedai", "bevy_hanabi"),
+        Repository::library("iced-rs", "iced"),
+        Repository::library("loopystudios", "bevy_vello"),
+        Repository::library("ManevilleF", "hexx"),
+        Repository::library("nicopap", "cuicui_layout"),
+        Repository::library("lucaspoffo", "renet"),
+    ];
+
+    let mut repositories = Vec::new();
+    repositories.append(&mut engine_repositories);
+    repositories.append(&mut library_repositories);
+
+    repositories
+}
+
 #[tokio::main]
 async fn main() {
     // Args
@@ -14,8 +116,16 @@ async fn main() {
     let end = NaiveDate::parse_from_str(&args[2], "%Y-%m-%d").expect("Failed to parse date");
     println!("Args {} - {}", start, end);
 
-    let engine_updates = engine_updates(start, end).await.expect("engine_updates");
-    let library_updates = library_updates(start, end).await.expect("library_updates");
+    let repositories = repositories();
+
+    let engine_updates = engine_updates(start, end, &repositories)
+        .await
+        .expect("engine_updates");
+
+    let library_updates = library_updates(start, end, &repositories)
+        .await
+        .expect("library_updates");
+
     let rfc_updates = rfc_updates().await.expect("rfc_updates");
     let discussions = discussions(start, end).await.expect("start");
 
@@ -29,55 +139,22 @@ async fn main() {
         .expect("Failed to write to file");
 }
 
-async fn engine_updates(start: NaiveDate, end: NaiveDate) -> octocrab::Result<String> {
+async fn engine_updates(
+    start: NaiveDate,
+    end: NaiveDate,
+    repositories: &Vec<Repository>,
+) -> octocrab::Result<String> {
     let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env variable is required");
 
     let octocrab = Octocrab::builder().personal_token(token).build()?;
 
-    let engines = vec![
-        "Rust-SDL2/rust-sdl2",
-        "bevyengine/bevy",
-        "PistonDevelopers/piston",
-        "not-fl3/macroquad",
-        "ggez/ggez",
-        "nannou-org/nannou",
-        "jeremyletang/rust-sfml",
-        "amethyst/bracket-lib",
-        "17cupsofcoffee/tetra",
-        "godot-rust/gdnative",
-        "deltaphc/raylib-rs",
-        "PsichiX/oxygengine",
-        "VincentFoulon80/console_engine",
-        "AryanpurTech/BlueEngine",
-        "Nazariglez/notan",
-        "CleanCut/rusty_engine",
-        "geng-engine/geng",
-        "FyroxEngine/Fyrox",
-        "redpenguinyt/gemini-rust",
-        "attackgoat/screen-13",
-        "MalekiRe/stereokit-rs",
-        "jice-nospam/doryen-rs",
-        "polymonster/hotline",
-        "AmbientRun/Ambient",
-        "PistonDevelopers/turbine",
-        "markusmoenig/Eldiron",
-        "JustAPotota/defold-rs",
-        "leetvr/hotham",
-        "PikuseruConsole/pikuseru",
-        "gamercade-io/gamercade_console",
-        "jjant/runty8",
-        "Maix0/pixel_engine",
-    ];
-
     let mut markdown = String::from("# Engine Updates\n\n");
 
-    for engine in engines {
-        let (owner, repo) = engine.split_once('/').unwrap();
-
-        println!("{}/{}", owner, repo);
+    for repository in repositories.iter().filter(|repo| repo.is_engine()) {
+        println!("{}/{}", repository.owner, repository.name);
 
         let releases = octocrab
-            .repos(owner, repo)
+            .repos(&repository.owner, &repository.name)
             .releases()
             .list()
             .send()
@@ -104,7 +181,7 @@ async fn engine_updates(start: NaiveDate, end: NaiveDate) -> octocrab::Result<St
             if is_new && !text.is_empty() {
                 markdown.push_str(&format!(
                     "## {repo} {name}\n\n {text}\n\n",
-                    repo = repo,
+                    repo = repository.name,
                     name = release.name.unwrap_or_default(),
                     text = text,
                 ));
@@ -115,31 +192,22 @@ async fn engine_updates(start: NaiveDate, end: NaiveDate) -> octocrab::Result<St
     Ok(markdown)
 }
 
-async fn library_updates(start: NaiveDate, end: NaiveDate) -> octocrab::Result<String> {
+async fn library_updates(
+    start: NaiveDate,
+    end: NaiveDate,
+    repositories: &Vec<Repository>,
+) -> octocrab::Result<String> {
     let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env variable is required");
 
     let octocrab = Octocrab::builder().personal_token(token).build()?;
 
-    let projects = vec![
-        "Jondolf/bevy_xpbd",
-        "LechintanTudor/sparsey",
-        "djeedai/bevy_hanabi",
-        "iced-rs/iced",
-        "loopystudios/bevy_vello",
-        "ManevilleF/hexx",
-        "nicopap/cuicui_layout",
-        "lucaspoffo/renet",
-    ];
-
     let mut markdown = String::from("# Library Updates\n\n");
 
-    for project in projects {
-        let (owner, repo) = project.split_once('/').unwrap();
-
-        println!("{}/{}", owner, repo);
+    for repository in repositories.iter().filter(|repo| repo.is_library()) {
+        println!("{}/{}", repository.owner, repository.name);
 
         let releases = octocrab
-            .repos(owner, repo)
+            .repos(&repository.owner, &repository.name)
             .releases()
             .list()
             .send()
@@ -166,7 +234,7 @@ async fn library_updates(start: NaiveDate, end: NaiveDate) -> octocrab::Result<S
             if is_new && !text.is_empty() {
                 markdown.push_str(&format!(
                     "## {repo} {name}\n\n {text}\n\n",
-                    repo = repo,
+                    repo = repository.name,
                     name = release.name.unwrap_or_default(),
                     text = text,
                 ));
