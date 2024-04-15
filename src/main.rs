@@ -6,6 +6,8 @@ use roux::{
 };
 use std::{env, fs::File, io::Write};
 
+mod ai_summarizer;
+
 /// Kind of repository
 enum RepositoryKind {
     Engine,
