@@ -7,6 +7,7 @@ use roux::{
 use std::{env, fs::File, io::Write};
 
 /// Kind of repository
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 enum RepositoryKind {
     Engine,
     Library,
@@ -15,6 +16,7 @@ enum RepositoryKind {
 }
 
 /// Github repository
+#[derive(Debug, Clone, Eq, PartialEq)]
 struct Repository {
     owner: String,
     name: String,
@@ -54,86 +56,135 @@ impl Repository {
         matches!(self.kind, RepositoryKind::Library)
     }
 
+    #[allow(dead_code)]
     fn is_game(&self) -> bool {
         matches!(self.kind, RepositoryKind::Game)
     }
 
+    #[allow(dead_code)]
     fn is_rust(&self) -> bool {
         matches!(self.kind, RepositoryKind::Rust)
     }
 }
 
 fn repositories() -> Vec<Repository> {
-    let mut engine_repositories = vec![
-        Repository::engine("Rust-SDL2", "rust-sdl2"),
-        Repository::engine("bevyengine", "bevy"),
-        Repository::engine("PistonDevelopers", "piston"),
-        Repository::engine("not-fl3", "macroquad"),
-        Repository::engine("ggez", "ggez"),
-        Repository::engine("nannou-org", "nannou"),
-        Repository::engine("jeremyletang", "rust-sfml"),
-        Repository::engine("amethyst", "bracket-lib"),
-        Repository::engine("17cupsofcoffee", "tetra"),
-        Repository::engine("godot-rust", "gdnative"),
-        Repository::engine("deltaphc", "raylib-rs"),
-        Repository::engine("PsichiX", "oxygengine"),
-        Repository::engine("VincentFoulon80", "console_engine"),
-        Repository::engine("AryanpurTech", "BlueEngine"),
-        Repository::engine("Nazariglez", "notan"),
-        Repository::engine("CleanCut", "rusty_engine"),
-        Repository::engine("geng-engine", "geng"),
-        Repository::engine("FyroxEngine", "Fyrox"),
-        Repository::engine("redpenguinyt", "gemini-rust"),
-        Repository::engine("attackgoat", "screen-13"),
-        Repository::engine("MalekiRe", "stereokit-rs"),
-        Repository::engine("jice-nospam", "doryen-rs"),
-        Repository::engine("polymonster", "hotline"),
-        Repository::engine("AmbientRun", "Ambient"),
-        Repository::engine("PistonDevelopers", "turbine"),
-        Repository::engine("markusmoenig", "Eldiron"),
-        Repository::engine("JustAPotota", "defold-rs"),
-        Repository::engine("leetvr", "hotham"),
-        Repository::engine("PikuseruConsole", "pikuseru"),
-        Repository::engine("gamercade-io", "gamercade_console"),
-        Repository::engine("jjant", "runty8"),
-        Repository::engine("Maix0", "pixel_engine"),
-    ];
+    let engine_repositories: Vec<_> = [
+        ("Rust-SDL2", "rust-sdl2"),
+        ("bevyengine", "bevy"),
+        ("PistonDevelopers", "piston"),
+        ("not-fl3", "macroquad"),
+        ("ggez", "ggez"),
+        ("nannou-org", "nannou"),
+        ("jeremyletang", "rust-sfml"),
+        ("amethyst", "bracket-lib"),
+        ("17cupsofcoffee", "tetra"),
+        ("godot-rust", "gdnative"),
+        ("deltaphc", "raylib-rs"),
+        ("PsichiX", "oxygengine"),
+        ("VincentFoulon80", "console_engine"),
+        ("AryanpurTech", "BlueEngine"),
+        ("Nazariglez", "notan"),
+        ("CleanCut", "rusty_engine"),
+        ("geng-engine", "geng"),
+        ("FyroxEngine", "Fyrox"),
+        ("redpenguinyt", "gemini-rust"),
+        ("attackgoat", "screen-13"),
+        ("MalekiRe", "stereokit-rs"),
+        ("jice-nospam", "doryen-rs"),
+        ("polymonster", "hotline"),
+        ("AmbientRun", "Ambient"),
+        ("PistonDevelopers", "turbine"),
+        ("markusmoenig", "Eldiron"),
+        ("JustAPotota", "defold-rs"),
+        ("leetvr", "hotham"),
+        ("PikuseruConsole", "pikuseru"),
+        ("gamercade-io", "gamercade_console"),
+        ("jjant", "runty8"),
+        ("Maix0", "pixel_engine"),
+    ]
+    .map(|(owner, name)| Repository::engine(owner, name))
+    .into_iter()
+    .collect();
 
-    // TODO add everything from https://github.com/EmbarkStudios/rust-ecosystem?tab=readme-ov-file#open-source
-    let mut library_repositories = vec![
-        Repository::library("Jondolf", "bevy_xpbd"),
-        Repository::library("LechintanTudor", "sparsey"),
-        Repository::library("djeedai", "bevy_hanabi"),
-        Repository::library("iced-rs", "iced"),
-        Repository::library("loopystudios", "bevy_vello"),
-        Repository::library("ManevilleF", "hexx"),
-        Repository::library("nicopap", "cuicui_layout"),
-        Repository::library("lucaspoffo", "renet"),
-        Repository::library("makspll", "bevy_mod_scripting"),
-        Repository::library("rust-windowing", "winit"),
-        Repository::library("HouraiTeahouse", "backroll-rs"),
-        Repository::library("gfx-rs", "wgpu"),
-        Repository::library("hadronized", "luminance-rs"),
-        Repository::library("mun-lang", "mun"),
-    ];
+    let library_repositories: Vec<_> = [
+        ("Jondolf", "bevy_xpbd"),
+        ("LechintanTudor", "sparsey"),
+        ("djeedai", "bevy_hanabi"),
+        ("iced-rs", "iced"),
+        ("loopystudios", "bevy_vello"),
+        ("ManevilleF", "hexx"),
+        ("nicopap", "cuicui_layout"),
+        ("lucaspoffo", "renet"),
+        ("makspll", "bevy_mod_scripting"),
+        ("rust-windowing", "winit"),
+        ("HouraiTeahouse", "backroll-rs"),
+        ("gfx-rs", "wgpu"),
+        ("hadronized", "luminance-rs"),
+        ("mun-lang", "mun"),
+        ("EmbarkStudios", "ash-molten"),
+        ("EmbarkStudios", "buildkite-jobify"),
+        ("EmbarkStudios", "cargo-about"),
+        ("EmbarkStudios", "cargo-deny"),
+        ("EmbarkStudios", "cargo-fetcher"),
+        ("EmbarkStudios", "cervo"),
+        ("EmbarkStudios", "cfg-expr"),
+        ("EmbarkStudios", "cloud-dns"),
+        ("EmbarkStudios", "crash-handling"),
+        ("EmbarkStudios", "discord-sdk"),
+        ("EmbarkStudios", "fsr-rs"),
+        ("EmbarkStudios", "gsutil"),
+        ("EmbarkStudios", "kajiya"),
+        ("EmbarkStudios", "krates"),
+        ("EmbarkStudios", "mirror-mirror"),
+        ("EmbarkStudios", "octobors"),
+        ("EmbarkStudios", "physx"),
+        ("EmbarkStudios", "poll-promise"),
+        ("EmbarkStudios", "presser"),
+        ("EmbarkStudios", "puffin"),
+        ("EmbarkStudios", "relnotes"),
+        ("EmbarkStudios", "rpmalloc-rs"),
+        ("EmbarkStudios", "rust-gpu"),
+        ("EmbarkStudios", "rymder"),
+        ("EmbarkStudios", "spdx"),
+        ("EmbarkStudios", "spirv-tools-rs"),
+        ("EmbarkStudios", "superluminal-perf"),
+        ("EmbarkStudios", "tame-gcs"),
+        ("EmbarkStudios", "tame-oauth"),
+        ("EmbarkStudios", "tame-oidc"),
+        ("EmbarkStudios", "tame-webpurify"),
+        ("EmbarkStudios", "texture-synthesis"),
+        ("EmbarkStudios", "tiny-bench"),
+        ("EmbarkStudios", "tracing-ext-ffi-subscriber"),
+        ("EmbarkStudios", "tracing-logfmt"),
+        ("EmbarkStudios", "tryhard"),
+    ]
+    .map(|(owner, name)| Repository::library(owner, name))
+    .into_iter()
+    .collect();
 
-    let mut rust_repositories = vec![
-        Repository::rust("rust-gamedev", "arewegameyet"), //
-    ];
+    let rust_repositories: Vec<_> = [("rust-gamedev", "arewegameyet")]
+        .map(|(owner, name)| Repository::rust(owner, name))
+        .into_iter()
+        .collect();
 
-    let mut game_repositories = vec![
-        Repository::game("veloren", "veloren"),
-        Repository::game("a-b-street", "abstreet"),
-        Repository::game("mkhan45", "SIMple-Mechanics"),
-    ];
+    let game_repositories: Vec<_> = [
+        ("veloren", "veloren"),
+        ("a-b-street", "abstreet"),
+        ("mkhan45", "SIMple-Mechanics"),
+    ]
+    .map(|(owner, name)| Repository::game(owner, name))
+    .into_iter()
+    .collect();
 
-    let mut repositories = Vec::new();
-    repositories.append(&mut engine_repositories);
-    repositories.append(&mut library_repositories);
-    repositories.append(&mut rust_repositories);
-    repositories.append(&mut game_repositories);
-
-    repositories
+    [
+        engine_repositories,
+        library_repositories,
+        rust_repositories,
+        game_repositories,
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
 }
 
 #[tokio::main]
@@ -170,7 +221,7 @@ async fn main() {
 async fn engine_updates(
     start: NaiveDate,
     end: NaiveDate,
-    repositories: &Vec<Repository>,
+    repositories: &[Repository],
 ) -> octocrab::Result<String> {
     let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env variable is required");
 
@@ -223,7 +274,7 @@ async fn engine_updates(
 async fn library_updates(
     start: NaiveDate,
     end: NaiveDate,
-    repositories: &Vec<Repository>,
+    repositories: &[Repository],
 ) -> octocrab::Result<String> {
     let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env variable is required");
 
@@ -273,7 +324,7 @@ async fn library_updates(
     Ok(markdown)
 }
 
-async fn rfc_updates(repositories: &Vec<Repository>) -> octocrab::Result<String> {
+async fn rfc_updates(repositories: &[Repository]) -> octocrab::Result<String> {
     let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env variable is required");
 
     let octocrab = Octocrab::builder().personal_token(token).build()?;
@@ -289,8 +340,8 @@ async fn rfc_updates(repositories: &Vec<Repository>) -> octocrab::Result<String>
             .await?
             .items;
 
-        let keywords = vec!["first", "good", "easy", "beginner", "help", "wanted"];
-        let negative_keywords = vec![
+        let keywords = ["first", "good", "easy", "beginner", "help", "wanted"];
+        let negative_keywords = [
             "challenging",
             "complex",
             "hard",
