@@ -3,10 +3,17 @@ name = "newsletter-experiment"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = []
+llama = ["llama_cpp-rs", "num_cpus"]
 
 [dependencies]
 chrono = "0.4.38"
 octocrab = "0.38.0"
 roux = "2.2.12"
 tokio = { version = "1.37.0", features = ["full"] }
+
+# the only stable LLaMa.cpp wrapper that is easily usable.
+# The original repo does not have library structure so this is a fork of it.
+llama_cpp-rs = { git = "https://github.com/ArkForgeLabs/llama_cpp-rs", rev = "5906f2d4f40a618234195122ef999d7dcd4a154a", optional = true }
+num_cpus = { version = "1.16.0", optional = true }
