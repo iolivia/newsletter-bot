@@ -147,7 +147,7 @@ fn repositories() -> Vec<Repository> {
         ("EmbarkStudios", "rymder"),
         ("EmbarkStudios", "spdx"),
         ("EmbarkStudios", "spirv-tools-rs"),
-        ("EmbarkStudios", "superluminal-perf"),
+        ("EmbarkStudios", "superluminal-perf-rs"),
         ("EmbarkStudios", "tame-gcs"),
         ("EmbarkStudios", "tame-oauth"),
         ("EmbarkStudios", "tame-oidc"),
