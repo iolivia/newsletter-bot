@@ -36,6 +36,33 @@
 
 **Full Changelog**: https://github.com/makspll/bevy_mod_scripting/compare/v0.5.0...v0.6.0
 
+## ash-molten Release 0.19.0+1.2.8
+
+ ##### Changed
+- [PR#83](https://github.com/EmbarkStudios/ash-molten/pull/83) Upgrade `ash` to `0.38`
+
+
+## cargo-deny 0.14.21
+
+ ##### Fixed
+- [PR#643](https://github.com/EmbarkStudios/cargo-deny/pull/643) resolved [#629](https://github.com/EmbarkStudios/cargo-deny/issues/629) by making the hosted git (github, gitlab, bitbucket) org/user name comparison case-insensitive. Thanks [@pmnlla](https://github.com/pmnlla)!
+- [PR#649](https://github.com/EmbarkStudios/cargo-deny/pull/649) fixed an issue where depending on the same crate multiple times by using different `cfg()/triple` targets could cause features to be resolved incorrectly and thus crates to be not pulled into the graph used for checking.
+
+## cfg-expr 
+
+ ##### Changed
+- [PR#69](https://github.com/EmbarkStudios/cfg-expr/pull/69) updated the builtin target list to 1.77.2.
+
+## krates 
+
+ ##### Fixed
+- [PR#81](https://github.com/EmbarkStudios/krates/pull/81) re-resolved [#79](https://github.com/EmbarkStudios/krates/issues/79) because the PR#80 completely broke in the presence of cargo patches.
+
+## krates 
+
+ ##### Fixed
+- [PR#80](https://github.com/EmbarkStudios/krates/pull/80) resolved [#79](https://github.com/EmbarkStudios/krates/issues/79) by fixing an extreme edge case with dependency renaming.
+
 
 
 # Requests for Contribution
@@ -43,13 +70,13 @@
 ## rust-sdl2 - 1 Beginner Open Issues
 
 * Support "bundled" feature with "gfx", "image", "mixer" and "ttf" features
-## bevy - 99 Beginner Open Issues
+## bevy - 100 Beginner Open Issues
 
-* Improve documentation and example around enabling audio formats in Cargo.toml
-* Revert "Support calculating normals for indexed meshes"
-* Make an example for bevy_ui gizmos layout overlay
-* Split apart and reorganize gizmo examples
-* Add examples demonstrating how to follow the player with a camera
+* `check-missing-*-in-docs` job does not install Rust
+* Clarify camera coordinate system further
+* Add `ExitCode` to `AppExit`
+* Remove unecessary lint
+* Create an example showcasing disjoint mutable access to the world via `unsafe_world_cell`
 ## macroquad - 1 Beginner Open Issues
 
 * is_key_down(KeyCode::LeftShift) reports as false for any modifier keys on macos

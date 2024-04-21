@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = "0.4.37"
-octocrab = "0.37.0"
+chrono = "0.4.38"
+octocrab = "0.38.0"
 roux = "2.2.12"
 tokio = { version = "1.37.0", features = ["full"] }

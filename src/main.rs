@@ -232,39 +232,41 @@ async fn engine_updates(
     for repository in repositories.iter().filter(|repo| repo.is_engine()) {
         println!("{}/{}", repository.owner, repository.name);
 
-        let releases = octocrab
+        if let Ok(releases) = octocrab
             .repos(&repository.owner, &repository.name)
             .releases()
             .list()
             .send()
-            .await?
-            .items;
+            .await
+        {
+            for release in releases.items {
+                let is_new = {
+                    let is_after_start = release.published_at.unwrap().naive_utc().date() >= start;
+                    let is_before_end = release.published_at.unwrap().naive_utc().date() <= end;
 
-        for release in releases {
-            let is_new = {
-                let is_after_start = release.published_at.unwrap().naive_utc().date() >= start;
-                let is_before_end = release.published_at.unwrap().naive_utc().date() <= end;
+                    is_after_start && is_before_end
+                };
 
-                is_after_start && is_before_end
-            };
+                println!(
+                    "Found release: {status} {tag_name} {published_at}",
+                    published_at = release.published_at.unwrap(),
+                    tag_name = release.tag_name,
+                    status = if is_new { "✅" } else { "❌" }
+                );
 
-            println!(
-                "Found release: {status} {tag_name} {published_at}",
-                published_at = release.published_at.unwrap(),
-                tag_name = release.tag_name,
-                status = if is_new { "✅" } else { "❌" }
-            );
+                let text = release.body.unwrap_or_default().replace("# ", "### ");
 
-            let text = release.body.unwrap_or_default().replace("# ", "### ");
-
-            if is_new && !text.is_empty() {
-                markdown.push_str(&format!(
-                    "## {repo} {name}\n\n {text}\n\n",
-                    repo = repository.name,
-                    name = release.name.unwrap_or_default(),
-                    text = text,
-                ));
+                if is_new && !text.is_empty() {
+                    markdown.push_str(&format!(
+                        "## {repo} {name}\n\n {text}\n\n",
+                        repo = repository.name,
+                        name = release.name.unwrap_or_default(),
+                        text = text,
+                    ));
+                }
             }
+        } else {
+            println!("Found release: 🟨 check link");
         }
     }
 
@@ -285,39 +287,41 @@ async fn library_updates(
     for repository in repositories.iter().filter(|repo| repo.is_library()) {
         println!("{}/{}", repository.owner, repository.name);
 
-        let releases = octocrab
+        if let Ok(releases) = octocrab
             .repos(&repository.owner, &repository.name)
             .releases()
             .list()
             .send()
-            .await?
-            .items;
+            .await
+        {
+            for release in releases.items {
+                let is_new = {
+                    let is_after_start = release.published_at.unwrap().naive_utc().date() >= start;
+                    let is_before_end = release.published_at.unwrap().naive_utc().date() <= end;
 
-        for release in releases {
-            let is_new = {
-                let is_after_start = release.published_at.unwrap().naive_utc().date() >= start;
-                let is_before_end = release.published_at.unwrap().naive_utc().date() <= end;
+                    is_after_start && is_before_end
+                };
 
-                is_after_start && is_before_end
-            };
+                println!(
+                    "Found release: {status} {tag_name} {published_at}",
+                    published_at = release.published_at.unwrap(),
+                    tag_name = release.tag_name,
+                    status = if is_new { "✅" } else { "❌" }
+                );
 
-            println!(
-                "Found release: {status} {tag_name} {published_at}",
-                published_at = release.published_at.unwrap(),
-                tag_name = release.tag_name,
-                status = if is_new { "✅" } else { "❌" }
-            );
+                let text = release.body.unwrap_or_default().replace("# ", "### ");
 
-            let text = release.body.unwrap_or_default().replace("# ", "### ");
-
-            if is_new && !text.is_empty() {
-                markdown.push_str(&format!(
-                    "## {repo} {name}\n\n {text}\n\n",
-                    repo = repository.name,
-                    name = release.name.unwrap_or_default(),
-                    text = text,
-                ));
+                if is_new && !text.is_empty() {
+                    markdown.push_str(&format!(
+                        "## {repo} {name}\n\n {text}\n\n",
+                        repo = repository.name,
+                        name = release.name.unwrap_or_default(),
+                        text = text,
+                    ));
+                }
             }
+        } else {
+            println!("Found release: 🟨 check link");
         }
     }
 
@@ -332,90 +336,97 @@ async fn rfc_updates(repositories: &[Repository]) -> octocrab::Result<String> {
     let mut markdown = String::from("# Requests for Contribution\n\n");
 
     for repository in repositories {
-        let labels = octocrab
+        if let Ok(labels) = octocrab
             .issues(&repository.owner, &repository.name)
             .list_labels_for_repo()
             .per_page(100)
             .send()
-            .await?
-            .items;
+            .await
+        {
+            let keywords = ["first", "good", "easy", "beginner", "help", "wanted"];
+            let negative_keywords = [
+                "challenging",
+                "complex",
+                "hard",
+                "difficult",
+                "performance",
+                "crash",
+            ];
 
-        let keywords = ["first", "good", "easy", "beginner", "help", "wanted"];
-        let negative_keywords = [
-            "challenging",
-            "complex",
-            "hard",
-            "difficult",
-            "performance",
-            "crash",
-        ];
+            let relevant_labels = labels
+                .items
+                .iter()
+                .filter(|label| {
+                    let has_keyword_in_name = keywords
+                        .iter()
+                        .any(|keyword| label.name.to_lowercase().contains(keyword));
 
-        let relevant_labels = labels
-            .iter()
-            .filter(|label| {
-                let has_keyword_in_name = keywords
-                    .iter()
-                    .any(|keyword| label.name.to_lowercase().contains(keyword));
+                    let has_keyword_in_description = keywords.iter().any(|keyword| {
+                        label
+                            .description
+                            .clone()
+                            .map(|x| x.contains(keyword))
+                            .unwrap_or_default()
+                    });
 
-                let has_keyword_in_description = keywords.iter().any(|keyword| {
-                    label
-                        .description
-                        .clone()
-                        .map(|x| x.contains(keyword))
-                        .unwrap_or_default()
-                });
+                    let has_negative_keyword_in_name = negative_keywords
+                        .iter()
+                        .any(|keyword| label.name.to_lowercase().contains(keyword));
 
-                let has_negative_keyword_in_name = negative_keywords
-                    .iter()
-                    .any(|keyword| label.name.to_lowercase().contains(keyword));
+                    let has_negative_keyword_in_description =
+                        negative_keywords.iter().any(|keyword| {
+                            label
+                                .description
+                                .clone()
+                                .map(|x| x.contains(keyword))
+                                .unwrap_or_default()
+                        });
 
-                let has_negative_keyword_in_description = negative_keywords.iter().any(|keyword| {
-                    label
-                        .description
-                        .clone()
-                        .map(|x| x.contains(keyword))
-                        .unwrap_or_default()
-                });
+                    (has_keyword_in_name || has_keyword_in_description)
+                        && !has_negative_keyword_in_name
+                        && !has_negative_keyword_in_description
+                })
+                .map(|label| label.name.clone())
+                .collect::<Vec<_>>();
 
-                (has_keyword_in_name || has_keyword_in_description)
-                    && !has_negative_keyword_in_name
-                    && !has_negative_keyword_in_description
-            })
-            .map(|label| label.name.clone())
-            .collect::<Vec<_>>();
+            let issues = octocrab
+                .issues(&repository.owner, &repository.name)
+                .list()
+                .labels(&relevant_labels)
+                .per_page(100)
+                .send()
+                .await?
+                .items;
 
-        let issues = octocrab
-            .issues(&repository.owner, &repository.name)
-            .list()
-            .labels(&relevant_labels)
-            .per_page(100)
-            .send()
-            .await?
-            .items;
+            let open_issues = issues
+                .iter()
+                .filter(|issue| issue.state == IssueState::Open)
+                .collect::<Vec<_>>();
 
-        let open_issues = issues
-            .iter()
-            .filter(|issue| issue.state == IssueState::Open)
-            .collect::<Vec<_>>();
-
-        println!(
-            "{}/{} - {:?} Beginner Open Issues - {}",
-            repository.owner,
-            repository.name,
-            open_issues.len(),
-            if open_issues.is_empty() { "❌" } else { "✅" }
-        );
-
-        if !open_issues.is_empty() {
-            markdown.push_str(&format!(
-                "## {} - {} Beginner Open Issues\n\n",
+            println!(
+                "{}/{} - {:?} Beginner Open Issues - {}",
+                repository.owner,
                 repository.name,
-                open_issues.len()
-            ));
+                open_issues.len(),
+                if open_issues.is_empty() { "❌" } else { "✅" }
+            );
 
-            for open_issue in open_issues.iter().take(5) {
-                markdown.push_str(&format!("* {name}\n", name = open_issue.title));
+            if !open_issues.is_empty() {
+                markdown.push_str(&format!(
+                    "## {} - {} Beginner Open Issues\n\n",
+                    repository.name,
+                    open_issues.len()
+                ));
+
+                for open_issue in open_issues.iter().take(5) {
+                    markdown.push_str(&format!("* {name}\n", name = open_issue.title));
+                }
             }
+        } else {
+            println!(
+                "{}/{} - 0 Beginner Open Issues - 🟨 check link",
+                repository.owner, repository.name,
+            );
         }
     }
 
