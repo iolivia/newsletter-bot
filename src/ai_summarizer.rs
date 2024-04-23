@@ -29,11 +29,7 @@ impl AiSummarizer {
         Self {
             model: llama_cpp_rs::llama_cpp::LlamaModel::load_from_file(
                 model_path,
-                if params.is_some() {
-                    params.unwrap()
-                } else {
-                    llama_cpp_rs::llama_cpp::LlamaParams::default()
-                },
+                params.unwrap_or_else(|| llama_cpp_rs::llama_cpp::LlamaParams::default()),
             )
             .expect("Failed to load model"),
         }
@@ -46,23 +42,22 @@ impl AiSummarizer {
     ) -> String {
         let mut context = self
             .model
-            .create_session(if session_params.is_some() {
-                session_params.unwrap()
-            } else {
+            .create_session(session_params.unwrap_or_else(|| {
+                println!("Using default session params");
                 llama_cpp_rs::llama_cpp::SessionParams::default()
-            })
+            }))
             .expect("Failed to create session");
 
         context.advance_context(format!(r#"
 <|im_start|>system
-you are a release summarizer assistant that summarizes release notes for rust gamedev newsletters. You will be given release notes as reference.
+you summarize release notes in a simple language and in one or two paragraphs. Include any web links.
 Do not write anything outside of the reference release notes. Do not write unless you are sure. Do not write out of context. Keep it clean.<|im_end|>
 <|im_start|>release notes
 {release_notes}<|im_end|>
 <|im_start|>assistant
 "#)).expect("Failed to advance context");
 
-        let max_tokens = 2048;
+        let max_tokens = 32000;
         context
             .start_completing_with(
                 llama_cpp_rs::llama_cpp::standard_sampler::StandardSampler::default(),

@@ -17,3 +17,11 @@ tokio = { version = "1.37.0", features = ["full"] }
 # The original repo does not have library structure so this is a fork of it.
 llama_cpp-rs = { git = "https://github.com/ArkForgeLabs/llama_cpp-rs", rev = "5906f2d4f40a618234195122ef999d7dcd4a154a", optional = true }
 num_cpus = { version = "1.16.0", optional = true }
+
+# ultimate release optimizations
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+overflow-checks = false
+debug = false

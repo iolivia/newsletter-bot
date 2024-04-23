@@ -176,6 +176,12 @@ async fn engine_updates(
 ) -> octocrab::Result<String> {
     let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN env variable is required");
 
+    #[cfg(feature = "llama")]
+    let model_path =
+        std::env::var("LLAMA_MODEL_PATH").expect("LLAMA_MODEL_PATH env variable is required");
+    #[cfg(feature = "llama")]
+    let ai = ai_summarizer::AiSummarizer::new(model_path.as_str(), None);
+
     let octocrab = Octocrab::builder().personal_token(token).build()?;
 
     let mut markdown = String::from("# Engine Updates\n\n");
@@ -209,6 +215,25 @@ async fn engine_updates(
             let text = release.body.unwrap_or_default().replace("# ", "### ");
 
             if is_new && !text.is_empty() {
+                #[cfg(feature = "llama")]
+                let text = {
+                    ai.summarize(
+                        if text.len() > 500 {
+                            &text[..500]
+                        } else {
+                            &text
+                        },
+                        Some(llama_cpp_rs::llama_cpp::SessionParams {
+                            n_batch: 32000,
+                            ..Default::default()
+                        }),
+                    );
+                    let text = text.split("<|im_end|>").collect::<Vec<_>>()[0];
+                    println!("Summary: {}", text);
+
+                    text
+                };
+
                 markdown.push_str(&format!(
                     "## {repo} {name}\n\n {text}\n\n",
                     repo = repository.name,
